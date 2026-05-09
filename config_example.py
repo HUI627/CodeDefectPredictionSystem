@@ -13,7 +13,12 @@ class CustomConfig:
         # - microsoft/codebert-base (推荐)
         # - microsoft/graphcodebert-base (更强大但更慢)
         # - huggingface/CodeBERTa-small-v1 (更小更快)
-        self.model_name = "microsoft/codebert-base"
+
+        # 使用本地模型路径（将下载的模型放在 models/codebert-base 文件夹中）
+        self.model_name = str(self.base_dir / "models" / "codebert-base")
+
+        # 如果要使用在线模型，取消注释下面这行：
+        # self.model_name = "microsoft/codebert-base"
         self.num_labels = 2  # 二分类
         self.hidden_size = 768
         self.dropout_rate = 0.1  # 增大可以减少过拟合

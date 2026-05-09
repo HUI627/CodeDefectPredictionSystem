@@ -49,12 +49,24 @@ def test_cuda():
         return False
 
 def test_model_download():
-    print("\n测试模型下载...")
+    print("\n测试模型加载...")
     try:
+        from pathlib import Path
         from transformers import AutoTokenizer
-        print("正在下载CodeBERT tokenizer（首次运行需要下载）...")
-        tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
-        print("✓ 模型下载成功")
+
+        # 尝试从本地加载模型
+        base_dir = Path(__file__).parent.absolute()
+        local_model_path = base_dir / "models" / "codebert-base"
+
+        if local_model_path.exists():
+            print(f"从本地加载模型: {local_model_path}")
+            tokenizer = AutoTokenizer.from_pretrained(str(local_model_path))
+            print("✓ 本地模型加载成功")
+        else:
+            print("本地模型不存在，从在线下载（首次运行需要下载）...")
+            tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
+            print("✓ 在线模型下载成功")
+            print(f"  提示: 运行 'python download_model.py' 可下载到本地")
 
         test_code = "def add(a, b): return a + b"
         tokens = tokenizer(test_code, return_tensors="pt")
