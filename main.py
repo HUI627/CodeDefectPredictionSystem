@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from config import config
-from src.utils import setup_logger, set_seed, create_directories
+from src.utils import setup_logging, set_seed, ensure_dir
 from src.data_loader import DataLoader
 from src.dataset import CodeDefectDataset
 from src.model import CodeDefectPredictor
@@ -24,7 +24,7 @@ from src.visualize import Visualizer
 from src.report_generator import ReportGenerator
 from transformers import AutoTokenizer
 
-logger = setup_logger()
+logger = setup_logging()
 
 def parse_args():
     """解析命令行参数"""
@@ -196,7 +196,10 @@ def main():
     set_seed(config.random_seed)
 
     # 创建必要的目录
-    create_directories(config)
+    for directory in [config.model_save_dir, config.results_dir, config.figures_dir,
+                      config.metrics_dir, config.reports_dir, config.data_dir,
+                      config.raw_data_dir, config.processed_data_dir]:
+        ensure_dir(directory)
 
     logger.info("=" * 60)
     logger.info("代码缺陷预测系统")
