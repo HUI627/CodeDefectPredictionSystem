@@ -104,7 +104,7 @@ def evaluate_model(test_df, tokenizer, model_path='best_model.pt'):
 
     # 加载模型
     model = CodeDefectPredictor(config.model_name, config.num_labels, config.dropout_rate)
-    checkpoint = torch.load(config.model_save_dir / model_path, map_location=config.device)
+    checkpoint = torch.load(config.model_save_dir / model_path, map_location=config.device, weights_only=True)
     model.load_state_dict(checkpoint['model_state_dict'])
     logger.info(f"✓ 模型已加载: {model_path}")
 
@@ -161,7 +161,8 @@ def predict_code(code, tokenizer, model_path='best_model.pt'):
     # 加载模型
     model = CodeDefectPredictor(config.model_name, config.num_labels, config.dropout_rate)
     checkpoint = torch.load(config.model_save_dir / model_path,
-                          map_location=torch.device('cpu'))
+                          map_location=torch.device('cpu'),
+                          weights_only=True)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
 

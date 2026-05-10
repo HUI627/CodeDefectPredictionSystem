@@ -159,8 +159,7 @@ class Trainer:
         model_path = self.config.model_save_dir / filename
         torch.save({
             'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'config': self.config
+            'optimizer_state_dict': self.optimizer.state_dict()
         }, model_path)
 
     def save_training_history(self):
@@ -178,6 +177,6 @@ class Trainer:
     def load_model(self, filename):
         """加载模型"""
         model_path = self.config.model_save_dir / filename
-        checkpoint = torch.load(model_path, map_location=self.device)
+        checkpoint = torch.load(model_path, map_location=self.device, weights_only=True)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         logger.info(f"模型已从 {model_path} 加载")
