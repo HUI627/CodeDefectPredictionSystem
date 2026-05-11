@@ -29,17 +29,22 @@ class DataLoader:
             logger.info(f"数据加载完成: Train={len(train_df)}, Val={len(val_df)}, Test={len(test_df)}")
             return train_df, val_df, test_df
 
-        # 尝试下载公开数据集
-        logger.info("尝试下载公开数据集...")
-        data = self._download_dataset()
+        # 优先尝试加载本地数据集
+        logger.info("检查本地数据集...")
+        train_data, val_data, test_data = self._load_local_dataset()
 
-        if data is None:
-            # 如果下载失败，使用示例数据
-            logger.warning("数据集下载失败，使用示例数据...")
-            data = self._create_sample_data()
+        if train_data is None:
+            # 如果本地没有数据，尝试下载公开数据集
+            logger.info("本地数据集不存在，尝试下载公开数据集...")
+            data = self._download_dataset()
 
-        # 预处理和划分数据
-        train_data, val_data, test_data = self._split_data(data)
+            if data is None:
+                # 如果下载失败，使用示例数据
+                logger.warning("数据集下载失败，使用示例数据...")
+                data = self._create_sample_data()
+
+            # 预处理和划分数据
+            train_data, val_data, test_data = self._split_data(data)
 
         # 计算统计信息
         stats = self._compute_statistics(train_data, val_data, test_data)
@@ -56,6 +61,42 @@ class DataLoader:
         return (self.processed_data_dir / 'train.csv').exists() and \
                (self.processed_data_dir / 'val.csv').exists() and \
                (self.processed_data_dir / 'test.csv').exists()
+
+    def _load_local_dataset(self):
+        """从本地加载数据集（Parquet格式）"""
+        try:
+            # 检查本地数据集路径
+            local_data_path = self.raw_data_dir / 'data'
+            train_file = local_data_path / 'train-00000-of-00001.parquet'
+            val_file = local_data_path / 'validation-00000-of-00001.parquet'
+            test_file = local_data_path / 'test-00000-of-00001.parquet'
+
+            # 检查文件是否存在
+            if not (train_file.exists() and val_file.exists() and test_file.exists()):
+                logger.info("本地数据集文件不完整")
+                return None, None, None
+
+            logger.info("发现本地数据集，开始加载...")
+
+            # 加载 Parquet 文件
+            train_df = pd.read_parquet(train_file)
+            val_df = pd.read_parquet(val_file)
+            test_df = pd.read_parquet(test_file)
+
+            # 转换为所需格式
+            train_data = [{'code': row['func'], 'label': row['target']}
+                         for _, row in train_df.iterrows()]
+            val_data = [{'code': row['func'], 'label': row['target']}
+                       for _, row in val_df.iterrows()]
+            test_data = [{'code': row['func'], 'label': row['target']}
+                        for _, row in test_df.iterrows()]
+
+            logger.info(f"✓ 本地数据集加载成功: Train={len(train_data)}, Val={len(val_data)}, Test={len(test_data)}")
+            return train_data, val_data, test_data
+
+        except Exception as e:
+            logger.warning(f"加载本地数据集失败: {str(e)}")
+            return None, None, None
 
     def _download_dataset(self):
         """尝试下载公开数据集"""
